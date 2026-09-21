@@ -1,0 +1,160 @@
+name: Canary Build
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  check:
+    name: Check for New Commits
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check-updates.outputs.has_changes }}
+      new_tag: ${{ steps.tagger.outputs.new_tag }}
+      formatted_date: ${{ steps.tagger.outputs.formatted_date }}
+    steps:
+      - name: Check for updates in YumaPlayer
+        id: check-updates
+        run: |
+          last_run=$(curl -s "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build.yml/runs?status=completed&per_page=1" | jq -r '.workflow_runs[0].created_at // "2026-01-01T00:00:00Z"')
+          app_updated=$(curl -s "https://api.github.com/repos/MuwMx/YumaPlayer/commits?sha=main&since=$last_run" | jq '. | length // 0')
+
+          if [ "$app_updated" -gt "0" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate build tag
+        id: tagger
+        run: |
+          echo "new_tag=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+          echo "formatted_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+  build:
+    name: Build (${{ matrix.distribution }}-${{ matrix.abi }})
+    needs: check
+    if: needs.check.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - distribution: gms
+            distributionCap: Gms
+            abi: arm64
+            abiCap: Arm64
+          - distribution: gms
+            distributionCap: Gms
+            abi: universal
+            abiCap: Universal
+          - distribution: foss
+            distributionCap: Foss
+            abi: arm64
+            abiCap: Arm64
+          - distribution: foss
+            distributionCap: Foss
+            abi: universal
+            abiCap: Universal
+    steps:
+      - name: Checkout YumaPlayer
+        uses: actions/checkout@v7
+        with:
+          repository: MuwMx/YumaPlayer
+          ref: main
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+          submodules: true
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-cleanup: on-success
+
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assemble${{ matrix.distributionCap }}Mobile${{ matrix.abiCap }}Release \
+            -PnightlyVersionName=canary.${{ needs.check.outputs.new_tag }}
+        env:
+          LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
+          LASTFM_SECRET: ${{ secrets.LASTFM_SECRET }}
+          TOGETHER_BEARER_TOKEN: ${{ secrets.TOGETHER_BEARER_TOKEN }}
+          CANVAS_BEARER_TOKEN: ${{ secrets.CANVAS_BEARER_TOKEN }}
+          EXTRACTOR_BEARER: ${{ secrets.EXTRACTOR_BEARER }}
+
+      - name: Sign APK
+        uses: ilharp/sign-android-release@v2.0.0
+        id: sign_app
+        with:
+          releaseDir: app/build/outputs/apk/${{ matrix.distribution }}/mobile/${{ matrix.abi }}/release
+          signingKey: ${{ secrets.SIGNING_KEY }}
+          keyAlias: ${{ secrets.ALIAS }}
+          keyStorePassword: ${{ secrets.STORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+          buildToolsVersion: 35.0.0
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: apk-${{ matrix.distribution }}-${{ matrix.abi }}
+          path: app/build/outputs/apk/${{ matrix.distribution }}/mobile/${{ matrix.abi }}/release/*-signed.apk
+          retention-days: 1
+
+  release:
+    name: Publish Canary Release
+    needs: [check, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all APKs
+        uses: actions/download-artifact@v8
+        with:
+          path: apks/
+          pattern: apk-*
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: canary-${{ needs.check.outputs.new_tag }}
+          name: "Canary ${{ needs.check.outputs.formatted_date }}"
+          body: |
+            ## ⚡ YumaPlayer Canary (${{ needs.check.outputs.formatted_date }})
+            Automated test build from [`MuwMx/YumaPlayer:main`](https://github.com/MuwMx/YumaPlayer).
+            
+            > ⚠️ **Notice:** Contains experimental changes and works in progress.
+          files: apks/*.apk
+          prerelease: true
+
+      - name: Checkout repo for README update
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+
+      - name: Replace Counter Digits
+        run: |
+          TAG="${{ needs.check.outputs.new_tag }}"
+          COUNTER=""
+          for (( i=0; i<${#TAG}; i++ )); do
+            D="${TAG:$i:1}"
+            COUNTER+="[![Download](https://rule34.xxx/counter/${D}.gif)](https://github.com/${{ github.repository }}/releases/latest) "
+          done
+          python3 -c "
+          import re
+          with open('README.md', 'r') as f: c = f.read()
+          c = re.sub(r'(\[!\[Download\]\(https://rule34\.xxx/counter/\d+\.gif\)\]\([^\)]+\)\s*)+', '$COUNTER\n', c)
+          with open('README.md', 'w') as f: f.write(c)
+          "
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "ci: bump counter to $TAG" || true
+          git push || true
