@@ -49,9 +49,9 @@
 
 ---
 
-> ⚠️ **IMPORTANT: DO NOT SUBMIT BUG REPORTS OR ISSUES HERE**
-> 
-> This repository only hosts automated CI/CD build artifacts.
+> [!WARNING]
+> ### ⚠️ DO NOT SUBMIT BUG REPORTS OR ISSUES HERE
+> This repository only hosts automated CI/CD build artifacts.  
 > All issues, crash logs, and feature requests must be opened at **[MuwMx/YumaPlayer Issues](https://github.com/MuwMx/YumaPlayer/issues)**.
 
 ---
