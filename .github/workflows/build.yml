@@ -103,11 +103,17 @@ jobs:
           keyPassword: ${{ secrets.KEY_PASSWORD }}
           buildToolsVersion: 35.0.0
 
+      - name: Rename APK to Canary
+        run: |
+          DIR="app/build/outputs/apk/${{ matrix.distribution }}/mobile/${{ matrix.abi }}/release"
+          SIGNED=$(find "$DIR" -name "*-signed.apk" | head -n 1)
+          mv "$SIGNED" "$DIR/app-${{ matrix.distribution }}-mobile-${{ matrix.abi }}-canary.apk"
+
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
           name: apk-${{ matrix.distribution }}-${{ matrix.abi }}
-          path: app/build/outputs/apk/${{ matrix.distribution }}/mobile/${{ matrix.abi }}/release/*-signed.apk
+          path: app/build/outputs/apk/${{ matrix.distribution }}/mobile/${{ matrix.abi }}/release/app-${{ matrix.distribution }}-mobile-${{ matrix.abi }}-canary.apk
           retention-days: 1
 
   release:
