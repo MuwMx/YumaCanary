@@ -49,9 +49,10 @@
 
 ---
 
-> [!WARNING]
-> - **DO NOT submit bug reports or issues on this repository.**
-> - All bug reports, feature requests, and crash logs must be created on the primary repository: **[MuwMx/YumaPlayer Issues](https://github.com/MuwMx/YumaPlayer/issues)**.
+> ⚠️ **IMPORTANT: DO NOT SUBMIT BUG REPORTS OR ISSUES HERE**
+> 
+> This repository only hosts automated CI/CD build artifacts.
+> All issues, crash logs, and feature requests must be opened at **[MuwMx/YumaPlayer Issues](https://github.com/MuwMx/YumaPlayer/issues)**.
 
 ---
 
