@@ -11,15 +11,19 @@
     <a href="https://github.com/MuwMx/YumaCanary/releases"><img src="https://img.shields.io/github/downloads/MuwMx/YumaCanary/total?style=for-the-badge&label=Downloads&labelColor=1e1e2e&color=ec4899" alt="Downloads" /></a>
     <a href="https://t.me/yumaplayer"><img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white&labelColor=1e1e2e" alt="Telegram" /></a>
   </p>
+</div>
 
-  <h4>⚡ Latest Build Date ⚡</h4>
-  <div>
-    <!-- R34 Animated Version Counter -->
-    [![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/0.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/6.gif)](https://github.com/MuwMx/YumaCanary/releases/latest)
-  </div>
+<h4 align="center">⚡ Latest Build Date ⚡</h4>
 
-  <br />
+<div align="center">
 
+[![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/0.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/6.gif)](https://github.com/MuwMx/YumaCanary/releases/latest)
+
+</div>
+
+<br />
+
+<div align="center">
   <table>
     <thead>
       <tr>
@@ -45,9 +49,27 @@
 
 ---
 
+> [!WARNING]
+> - **DO NOT submit bug reports or issues on this repository.**
+> - All bug reports, feature requests, and crash logs must be created on the primary repository: **[MuwMx/YumaPlayer Issues](https://github.com/MuwMx/YumaPlayer/issues)**.
+
+---
+
 ### ⚠️ Disclaimer & Expectations
 
 > **Canary builds are automated test cuts directly from the active development branch.**
 > - May contain incomplete UI experiments, playback glitches, or unexpected regressions.
 > - Intended for testers and early adopters who want to try new features first.
 > - In-app updater automatically notifies when a new Canary build is ready if selected in **Settings → Updates**.
+
+---
+
+<div align="center">
+
+### 🔰 License 🔰
+
+[![GNU GPLv3 Image](https://www.gnu.org/graphics/gplv3-127x51.png)](http://www.gnu.org/licenses/gpl-3.0.en.html)
+
+YumaPlayer Canary is free software licensed under the **GNU General Public License v3.0 (GPLv3)**.
+
+</div>
