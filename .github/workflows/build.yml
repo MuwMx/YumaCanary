@@ -102,15 +102,24 @@ jobs:
 
       - name: Rename APK to Canary
         run: |
-          DIR="app/build/outputs/apk/${{ matrix.distribution }}/mobile/${{ matrix.abi }}/release"
-          APK=$(find "$DIR" -name "*.apk" | head -n 1)
+          DIR="app/build/outputs/apk/${{ matrix.distribution }}Mobile${{ matrix.abiCap }}/release"
+          if [ ! -d "$DIR" ]; then
+            echo "Expected dir missing, full tree:"
+            find app/build/outputs/apk -maxdepth 6 -type f -print || true
+            APK=$(find app/build/outputs/apk -type f -name "*.apk" | head -n 1)
+            DIR=$(dirname "$APK")
+          else
+            APK=$(find "$DIR" -maxdepth 1 -type f -name "*.apk" | head -n 1)
+          fi
+          echo "Using APK=$APK"
           mv "$APK" "$DIR/app-${{ matrix.distribution }}-mobile-${{ matrix.abi }}-canary.apk"
+          echo "CANARY_DIR=$DIR" >> $GITHUB_ENV
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
           name: apk-${{ matrix.distribution }}-${{ matrix.abi }}
-          path: app/build/outputs/apk/${{ matrix.distribution }}/mobile/${{ matrix.abi }}/release/app-${{ matrix.distribution }}-mobile-${{ matrix.abi }}-canary.apk
+          path: ${{ env.CANARY_DIR }}/app-${{ matrix.distribution }}-mobile-${{ matrix.abi }}-canary.apk
           retention-days: 1
 
   release:
