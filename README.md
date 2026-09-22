@@ -7,7 +7,7 @@
 
   <p>
     <a href="https://github.com/MuwMx/YumaCanary/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/MuwMx/YumaCanary/build.yml?branch=main&style=for-the-badge&label=Canary%20Build&labelColor=1e1e2e&color=6366f1" alt="Build Status" /></a>
-    <a href="https://github.com/MuwMx/YumaCanary/releases/latest"><img src="https://img.shields.io/github/v/release/MuwMx/YumaCanary?display_name=release&style=for-the-badge&label=Latest%20Canary&labelColor=1e1e2e&color=f43f5e" alt="Latest Canary" /></a>
+    <a href="https://github.com/MuwMx/YumaCanary/releases/latest"><img src="https://img.shields.io/github/v/release/MuwMx/YumaCanary?include_prereleases&display_name=release&style=for-the-badge&label=Latest%20Canary&labelColor=1e1e2e&color=f43f5e" alt="Latest Canary" /></a>
     <a href="https://github.com/MuwMx/YumaCanary/releases"><img src="https://img.shields.io/github/downloads/MuwMx/YumaCanary/total?style=for-the-badge&label=Downloads&labelColor=1e1e2e&color=ec4899" alt="Downloads" /></a>
     <a href="https://t.me/yumaplayer"><img src="https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white&labelColor=1e1e2e" alt="Telegram" /></a>
   </p>
