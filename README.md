@@ -1,5 +1,5 @@
 <div align="center">
-  <img width="160" height="160" src="https://raw.githubusercontent.com/MuwMx/YumaPlayer/main/assets/ic_launcher.webp" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);" alt="YumaPlayer Icon" />
+  <img width="160" height="160" src="https://raw.githubusercontent.com/MuwMx/YumaPlayer/main/assets/yuma_logo.png" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);" alt="YumaPlayer Icon" />
 
   <h1>YumaPlayer Canary ⚡</h1>
   <p><strong>Official automated Canary & Nightly builds for <a href="https://github.com/MuwMx/YumaPlayer">YumaPlayer</a>.</strong></p>
