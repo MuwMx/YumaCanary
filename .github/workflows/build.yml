@@ -89,6 +89,7 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assemble${{ matrix.distributionCap }}Mobile${{ matrix.abiCap }}Release \
+            -Pcanary=true \
             -PnightlyVersionName=canary.${{ needs.check.outputs.new_tag }}
         env:
           LASTFM_API_KEY: ${{ secrets.LASTFM_API_KEY }}
