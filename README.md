@@ -17,7 +17,7 @@
 
 <div align="center">
 
-[![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/0.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/6.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/0.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/9.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/3.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) 
+[![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/0.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/6.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/0.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/9.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/2.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) [![Download](https://rule34.xxx/counter/4.gif)](https://github.com/MuwMx/YumaCanary/releases/latest) 
 </div>
 
 <br />
