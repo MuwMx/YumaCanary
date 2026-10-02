@@ -16,24 +16,46 @@ jobs:
       should_build: ${{ steps.check-updates.outputs.has_changes }}
       new_tag: ${{ steps.tagger.outputs.new_tag }}
       formatted_date: ${{ steps.tagger.outputs.formatted_date }}
+      target_commit: ${{ steps.check-updates.outputs.target_commit }}
     steps:
-      - name: Check for updates in YumaPlayer
+      - name: Checkout YumaPlayer
+        uses: actions/checkout@v7
+        with:
+          repository: MuwMx/YumaPlayer
+          ref: main
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+          fetch-depth: 25
+
+      - name: Fetch tags
+        run: git fetch --tags --force
+
+      - name: Check for updates
         id: check-updates
         run: |
-          last_run=$(curl -s "https://api.github.com/repos/${{ github.repository }}/actions/workflows/build.yml/runs?status=completed&per_page=1" | jq -r '.workflow_runs[0].created_at // "2026-01-01T00:00:00Z"')
-          app_updated=$(curl -s "https://api.github.com/repos/MuwMx/YumaPlayer/commits?sha=main&since=$last_run" | jq '. | length // 0')
+          TARGET_COMMIT=$(git log --grep="\[skip ci\]" --invert-grep -n 1 --format="%H")
+          echo "Target commit: $TARGET_COMMIT"
+          echo "target_commit=$TARGET_COMMIT" >> $GITHUB_OUTPUT
 
-          if [ "$app_updated" -gt "0" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Manual trigger: forcing build."
             echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
+            exit 0
+          fi
+
+          EXISTING_TAG=$(git tag --points-at "$TARGET_COMMIT" | grep '^canary-' || true)
+          if [ -n "$EXISTING_TAG" ]; then
+            echo "Commit $TARGET_COMMIT is already released under$EXISTING_TAG. Skipping build."
             echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "New commits found. Proceeding to build."
+            echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Generate build tag
         id: tagger
         run: |
-          echo "new_tag=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-          echo "formatted_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "new_tag=$(date +'\%Y\%m\%d')" >> $GITHUB_OUTPUT
+          echo "formatted_date=$(date +'\%Y-\%m-\%d')" >> $GITHUB_OUTPUT
 
   build:
     name: Build (${{ matrix.distribution }}-${{ matrix.abi }})
@@ -65,7 +87,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: MuwMx/YumaPlayer
-          ref: main
+          ref: ${{ needs.check.outputs.target_commit }}
           token: ${{ secrets.PAT_TOKEN || github.token }}
           submodules: true
 
@@ -142,6 +164,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: canary-${{ needs.check.outputs.new_tag }}
+          target_commitish: ${{ needs.check.outputs.target_commit }}
           name: "Canary ${{ needs.check.outputs.formatted_date }}"
           body: |
             ## ⚡ YumaPlayer Canary (${{ needs.check.outputs.formatted_date }})
