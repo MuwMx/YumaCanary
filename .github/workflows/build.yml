@@ -24,7 +24,7 @@ jobs:
           repository: MuwMx/YumaPlayer
           ref: main
           token: ${{ secrets.PAT_TOKEN || github.token }}
-          fetch-depth: 25
+          fetch-depth: 0
 
       - name: Fetch tags
         run: git fetch --tags --force
@@ -32,30 +32,32 @@ jobs:
       - name: Check for updates
         id: check-updates
         run: |
-          TARGET_COMMIT=$(git log --grep="\[skip ci\]" --invert-grep -n 1 --format="%H")
+          TARGET_COMMIT=$(git log --grep="\[skip ci\]" --invert-grep -n 1 --format="%H" || true)
+          if [ -z "$TARGET_COMMIT" ]; then
+            TARGET_COMMIT=$(git rev-parse HEAD)
+          fi
           echo "Target commit: $TARGET_COMMIT"
           echo "target_commit=$TARGET_COMMIT" >> $GITHUB_OUTPUT
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Manual trigger: forcing build."
             echo "has_changes=true" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          EXISTING_TAG=$(git tag --points-at "$TARGET_COMMIT" | grep '^canary-' || true)
-          if [ -n "$EXISTING_TAG" ]; then
-            echo "Commit $TARGET_COMMIT is already released under$EXISTING_TAG. Skipping build."
-            echo "has_changes=false" >> $GITHUB_OUTPUT
           else
-            echo "New commits found. Proceeding to build."
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+            EXISTING_TAG=$(git tag --points-at "$TARGET_COMMIT" | grep '^canary-' || true)
+            if [ -n "$EXISTING_TAG" ]; then
+              echo "Commit $TARGET_COMMIT is already released under$EXISTING_TAG. Skipping build."
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+            else
+              echo "New commits found. Proceeding to build."
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Generate build tag
         id: tagger
         run: |
-          echo "new_tag=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-          echo "formatted_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "new_tag=$(date +'\%Y\%m\%d')" >> $GITHUB_OUTPUT
+          echo "formatted_date=$(date +'\%Y-\%m-\%d')" >> $GITHUB_OUTPUT
 
   build:
     name: Build (${{ matrix.distribution }}-${{ matrix.abi }})
@@ -164,7 +166,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: canary-${{ needs.check.outputs.new_tag }}
-          target_commitish: ${{ needs.check.outputs.target_commit }}
+          target_commitish: ${{ needs.check.outputs.target_commit || github.sha || 'main' }}
           name: "Canary ${{ needs.check.outputs.formatted_date }}"
           body: |
             ## ⚡ YumaPlayer Canary (${{ needs.check.outputs.formatted_date }})
@@ -198,3 +200,4 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -am "ci: bump counter to $TAG [skip ci]" || true
           git push || true
+          
