@@ -56,8 +56,8 @@ jobs:
       - name: Generate build tag
         id: tagger
         run: |
-          echo "new_tag=$(date +'\%Y\%m\%d')" >> $GITHUB_OUTPUT
-          echo "formatted_date=$(date +'\%Y-\%m-\%d')" >> $GITHUB_OUTPUT
+          echo "new_tag=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+          echo "formatted_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
   build:
     name: Build (${{ matrix.distribution }}-${{ matrix.abi }})
