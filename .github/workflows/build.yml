@@ -16,9 +16,10 @@ jobs:
       should_build: ${{ steps.check-updates.outputs.has_changes }}
       new_tag: ${{ steps.tagger.outputs.new_tag }}
       formatted_date: ${{ steps.tagger.outputs.formatted_date }}
+      target_commit: ${{ steps.check-updates.outputs.target_commit }}
     steps:
       - name: Checkout YumaPlayer
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
         with:
           repository: MuwMx/YumaPlayer
           ref: main
@@ -35,6 +36,7 @@ jobs:
           if [ -z "$TARGET_COMMIT" ]; then
             TARGET_COMMIT=$(git rev-parse HEAD)
           fi
+          echo "target_commit=$TARGET_COMMIT" >> $GITHUB_OUTPUT
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Manual trigger: forcing build."
@@ -42,10 +44,10 @@ jobs:
           else
             EXISTING_TAG=$(git tag --points-at "$TARGET_COMMIT" | grep '^canary-' || true)
             if [ -n "$EXISTING_TAG" ]; then
-              echo "Commit $TARGET_COMMIT is already released under$EXISTING_TAG. Skipping build."
+              echo "Commit $TARGET_COMMIT is already released under $EXISTING_TAG. Skipping build."
               echo "has_changes=false" >> $GITHUB_OUTPUT
             else
-              echo "New commits found. Proceeding to build."
+              echo "New commits found on $TARGET_COMMIT. Proceeding to build."
               echo "has_changes=true" >> $GITHUB_OUTPUT
             fi
           fi
@@ -83,10 +85,10 @@ jobs:
             abiCap: Universal
     steps:
       - name: Checkout YumaPlayer
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
         with:
           repository: MuwMx/YumaPlayer
-          ref: main
+          ref: ${{ needs.check.outputs.target_commit }}
           token: ${{ secrets.PAT_TOKEN || github.token }}
           submodules: true
 
@@ -94,16 +96,15 @@ jobs:
         run: |
           mkdir -p app/keystore
           echo "${{ secrets.ANDROID_SIGNING_KEY }}" | base64 --decode > app/keystore/release.keystore
-          ls -lh app/keystore/release.keystore
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '21'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v6
+        uses: gradle/actions/setup-gradle@v4
         with:
           cache-cleanup: on-success
 
@@ -126,20 +127,18 @@ jobs:
       - name: Rename APK to Canary
         run: |
           DIR="app/build/outputs/apk/${{ matrix.distribution }}Mobile${{ matrix.abiCap }}/release"
-          if [ ! -d "$DIR" ]; then
-            echo "Expected dir missing, full tree:"
-            find app/build/outputs/apk -maxdepth 6 -type f -print || true
-            APK=$(find app/build/outputs/apk -type f -name "*.apk" | head -n 1)
-            DIR=$(dirname "$APK")
-          else
-            APK=$(find "$DIR" -maxdepth 1 -type f -name "*.apk" | head -n 1)
+          APK=$(find "$DIR" -maxdepth 1 -type f -name "*release*.apk" ! -name "*-unsigned.apk" | head -n 1)
+          if [ -z "$APK" ]; then
+            echo "Error: Release APK not found in $DIR"
+            exit 1
           fi
-          echo "Using APK=$APK"
-          mv "$APK" "$DIR/app-${{ matrix.distribution }}-mobile-${{ matrix.abi }}-canary.apk"
+          echo "Found APK: $APK"
+          TARGET_NAME="$DIR/app-${{ matrix.distribution }}-mobile-${{ matrix.abi }}-canary.apk"
+          mv "$APK" "$TARGET_NAME"
           echo "CANARY_DIR=$DIR" >> $GITHUB_ENV
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: apk-${{ matrix.distribution }}-${{ matrix.abi }}
           path: ${{ env.CANARY_DIR }}/app-${{ matrix.distribution }}-mobile-${{ matrix.abi }}-canary.apk
@@ -153,46 +152,22 @@ jobs:
       contents: write
     steps:
       - name: Download all APKs
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
           path: apks/
           pattern: apk-*
           merge-multiple: true
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: canary-${{ needs.check.outputs.new_tag }}
+          target_commitish: ${{ needs.check.outputs.target_commit }}
           name: "Canary ${{ needs.check.outputs.formatted_date }}"
           body: |
             ## ⚡ YumaPlayer Canary (${{ needs.check.outputs.formatted_date }})
-            Automated test build from [`MuwMx/YumaPlayer:main`](https://github.com/MuwMx/YumaPlayer).
+            Automated test build from commit [`${{ needs.check.outputs.target_commit }}`](https://github.com/MuwMx/YumaPlayer/commit/${{ needs.check.outputs.target_commit }}).
             
             > ⚠️ **Notice:** Contains experimental changes and works in progress.
           files: apks/*.apk
           prerelease: true
-
-      - name: Checkout repo for README update
-        uses: actions/checkout@v7
-        with:
-          ref: main
-          token: ${{ secrets.PAT_TOKEN || github.token }}
-
-      - name: Replace Counter Digits
-        run: |
-          TAG="${{ needs.check.outputs.new_tag }}"
-          COUNTER=""
-          for (( i=0; i<${#TAG}; i++ )); do
-            D="${TAG:$i:1}"
-            COUNTER+="[![Download](https://rule34.xxx/counter/${D}.gif)](https://github.com/${{ github.repository }}/releases/latest) "
-          done
-          python3 -c "
-          import re
-          with open('README.md', 'r') as f: c = f.read()
-          c = re.sub(r'(\[!\[Download\]\(https://rule34\.xxx/counter/\d+\.gif\)\]\([^\)]+\)\s*)+', '$COUNTER\n', c)
-          with open('README.md', 'w') as f: f.write(c)
-          "
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -am "ci: bump counter to $TAG [skip ci]" || true
-          git push origin main || true
