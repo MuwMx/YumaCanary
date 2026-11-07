@@ -151,21 +151,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          repository: MuwMx/YumaPlayer
-          ref: ${{ needs.check.outputs.target_commit }}
-          token: ${{ secrets.PAT_TOKEN || github.token }}
-
-      - name: Tag commit and push
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          TAG="canary-${{ needs.check.outputs.new_tag }}"
-          git tag -f "$TAG" "${{ needs.check.outputs.target_commit }}"
-          git push -f origin "$TAG"
-
       - name: Download all APKs
         uses: actions/download-artifact@v4
         with:
@@ -176,14 +161,15 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
           tag_name: canary-${{ needs.check.outputs.new_tag }}
+          target_commitish: main
           name: "Canary ${{ needs.check.outputs.formatted_date }}"
           body: |
             ## ⚡ YumaPlayer Canary (${{ needs.check.outputs.formatted_date }})
-            Automated test build from commit [`${{ needs.check.outputs.target_commit }}`](https://github.com/MuwMx/YumaPlayer/commit/${{ needs.check.outputs.target_commit }}).
+            Automated test build from [`MuwMx/YumaPlayer:main`](https://github.com/MuwMx/YumaPlayer).
             
             > ⚠️ **Notice:** Contains experimental changes and works in progress.
           files: apks/*.apk
           prerelease: true
           make_latest: false
-          token: ${{ secrets.PAT_TOKEN || github.token }}
