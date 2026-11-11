@@ -173,3 +173,34 @@ jobs:
           files: apks/*.apk
           prerelease: true
           make_latest: false
+
+      - name: Checkout Canary repository for README update
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.PAT_TOKEN || github.token }}
+
+      - name: Update R34 Counter in README
+        run: |
+          TAG="${{ needs.check.outputs.new_tag }}"
+          COUNTER=""
+          for (( i=0; i<${#TAG}; i++ )); do
+            D="${TAG:$i:1}"
+            COUNTER+="[![Download](https://rule34.xxx/counter/${D}.gif)](https://github.com/${{ github.repository }}/releases/latest) "
+          done
+          python3 -c "
+          import re
+          with open('README.md', 'r') as f:
+              content = f.read()
+          new_content = re.sub(
+              r'(\[!\[Download\]\(https://rule34\.xxx/counter/\d+\.gif\)\]\([^\)]+\)\s*)+',
+              '''$COUNTER\n''',
+              content
+          )
+          with open('README.md', 'w') as f:
+              f.write(new_content)
+          "
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -am "ci: bump counter to $TAG [skip ci]" || true
+          git push origin main || true
